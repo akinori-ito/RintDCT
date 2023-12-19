@@ -1,14 +1,14 @@
 test_that("DCT/IDCT pair works", {
-  N <- 2048
-  Ch <- DCT4(N/2)
-  test_intdct <- function(N,Ch) {
-    x <- floor(runif(N)*1000)
-    y <- intDCT(x,Ch)
-    xx <- intIDCT(y,Ch)
+  N <- 1024
+  L <- 100
+  test_intdct <- function(N) {
+    x <- matrix(floor(runif(N*L)*1000),nrow=L,ncol=N)
+    y <- intDCT(x)
+    xx <- intIDCT(y)
     if (any(xx!=x)) {
       return(FALSE)
     }
     TRUE
   }
-  expect_equal(test_intdct(N,Ch),TRUE)
+  expect_equal(test_intdct(N),TRUE)
 })

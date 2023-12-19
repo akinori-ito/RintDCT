@@ -13,53 +13,95 @@ DCT4 <- function(n) {
   x
 }
 
+intDCT2 <- function(x1,x2,Ch=NULL) {
+  n <- length(x1)
+  if (is.null(Ch)) Ch <- DCT4(n)
+  y1 <- rep(0,n)
+  y2 <- rep(0,n)
+  z <- floor(Ch %*% x2)+x1
+  y1 <- floor(Ch %*% z)-x2
+  y2 <- -floor(Ch %*% y1)+z
+  matrix(c(y1,y2),nrow=2,ncol=n,byrow=TRUE)
+}
+
 #' intDCT: the Integer DCT
 #' @export
-#' @param x the input integer vector
-#' @param Ch optional DCT-IV matrix, which should be half size of x
+#' @param x the input integer matrix
 #' @return transformed integer vector
 #' @examples
 #' \dontrun{
 #' library(RintDCT)
-#' x <- floor(runif(100)*100)
+#' x <- matrix(floor(runif(100)*100),ncol=4)
 #' Ch <- DCT4(50)
 #' y <- intDCT(x,Ch)
 #' }
 #'
-intDCT <- function(x,Ch=NULL) {
-  n <- length(x)
-  h <- n/2
-  h1 <- h+1
-  if (is.null(Ch)) Ch <- DCT4(h)
-  y <- rep(0,n)
-  z <- floor(Ch %*% x[h1:n])+x[1:h]
-  y[1:h] <- floor(Ch %*% z)-x[h1:n]
-  y[h1:n] <- -floor(Ch %*% y[1:h])+z
-  y
+intDCT <- function(x) {
+  dd <- dim(x)
+  L <- dd[1]
+  N <- dd[2]
+  was_odd <- FALSE
+  Ch <- DCT4(N)
+  if (L %% 2 == 1) {
+    L <- L+1
+    x <- rbind(x,rep(0,N))
+    was_odd <- TRUE
+  }
+  y <- matrix(0,nrow=L,ncol=N)
+  i <- 1
+  while (i < L) {
+    y[i:(i+1),] <- intDCT2(x[i,],x[i+1,],Ch)
+    i <- i+2
+  }
+  if (was_odd) {
+    return(y[1:(L-1),])
+  }
+  return(y)
 }
 
+intIDCT2 <- function(y1,y2,Ch=NULL) {
+  n <- length(y1)
+  if (is.null(Ch)) Ch <- DCT4(n)
+  x1 <- rep(0,n)
+  x2 <- rep(0,n)
+  z <- floor(Ch %*% y1)+y2
+  x2 <- floor(Ch %*% z)-y1
+  x1 <- -floor(Ch %*% x2)+z
+  matrix(c(x1,x2),nrow=2,ncol=n,byrow=TRUE)
+}
 #' intIDCT: the Integer Inverse DCT
 #' @export
-#' @param y the input integer vector
-#' @param Ch optional DCT-IV matrix, which should be half size of x
+#' @param x the input integer matrix
 #' @return transformed integer vector
 #' @examples
 #' \dontrun{
 #' library(RintDCT)
-#' y <- floor(runif(100)*100)
+#' y <- matrix(floor(runif(100)*100),ncol=4)
 #' Ch <- DCT4(50)
 #' x <- intDCT(y,Ch)
 #' }
 #'
-intIDCT <- function(y,Ch=NULL) {
-  n <- length(y)
-  h <- n/2
-  h1 <- h+1
-  if (is.null(Ch)) Ch <- DCT4(h)
-  xx <- rep(0,n)
-  z <- floor(Ch %*% y[1:h])+y[h1:n]
-  xx[h1:n] <- floor(Ch %*% z)-y[1:h]
-  xx[1:h] <- -floor(Ch %*% xx[h1:n])+z
-  xx
+intIDCT <- function(x) {
+  dd <- dim(x)
+  L <- dd[1]
+  N <- dd[2]
+  was_odd <- FALSE
+  Ch <- DCT4(N)
+  if (L %% 2 == 1) {
+    L <- L+1
+    x <- rbind(x,rep(0,N))
+    was_odd <- TRUE
+  }
+  y <- matrix(0,nrow=L,ncol=N)
+  i <- 1
+  while (i < L) {
+    y[i:(i+1),] <- intIDCT2(x[i,],x[i+1,],Ch)
+    i <- i+2
+  }
+  if (was_odd) {
+    return(y[1:(L-1),])
+  }
+  return(y)
 }
+
 
